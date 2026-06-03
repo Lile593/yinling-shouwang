@@ -1,0 +1,10 @@
+{
+  "app": {
+    "bundleName": "com.yinling.shouwang",
+    "vendor": "LiLe",
+    "versionCode": 1000001,
+    "versionName": "2.0.0",
+    "icon": "$media:layered_image",
+    "label": "$string:app_name"
+  }
+}
