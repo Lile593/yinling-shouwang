@@ -49,7 +49,10 @@ export class AppointmentManager {
     try {
       const allData = await this.store.getAll()
       const result: Appointment[] = []
-      for (const [key, value] of Object.entries(allData)) {
+      const dataEntries = Object.entries(allData) as Array<[string, Object]>
+      for (let i = 0; i < dataEntries.length; i++) {
+        const key: string = dataEntries[i][0]
+        const value: Object = dataEntries[i][1]
         if (typeof key === 'string' && key.startsWith(this.KEY_PREFIX) && typeof value === 'string') {
           result.push(JSON.parse(value) as Appointment)
         }

@@ -11,6 +11,14 @@
     {
       "name": "EntryAbility_label",
       "value": "label"
+    },
+    {
+      "name": "internet_permission_reason",
+      "value": "用于网络通信"
+    },
+    {
+      "name": "microphone_permission_reason",
+      "value": "用于录音和语音功能"
     }
   ]
 }

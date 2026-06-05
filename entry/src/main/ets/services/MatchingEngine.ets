@@ -1,5 +1,17 @@
 import { Volunteer, ServiceType, MatchResult, TimeSlot } from '../models/ServiceModels'
 
+interface MatchWeights {
+  skillMatch: number
+  availability: number
+  rating: number
+  serviceExperience: number
+}
+
+interface ScoreResult {
+  score: number
+  details: string[]
+}
+
 /**
  * 智能匹配引擎
  * 基于加权多维度评分算法，为老年人匹配最合适的志愿者
@@ -7,7 +19,7 @@ import { Volunteer, ServiceType, MatchResult, TimeSlot } from '../models/Service
 export class MatchingEngine {
   private static instance: MatchingEngine
   // 评分权重配置
-  private readonly weights = {
+  private readonly weights: MatchWeights = {
     skillMatch: 0.40,       // 技能匹配度
     availability: 0.25,     // 时间可用性
     rating: 0.20,           // 志愿者评分
@@ -32,7 +44,9 @@ export class MatchingEngine {
     const results: MatchResult[] = []
 
     for (const v of volunteers) {
-      const { score, details } = this.calculateScore(serviceType, v, preferredDay)
+      const calcResult = this.calculateScore(serviceType, v, preferredDay)
+      const score = calcResult.score
+      const details = calcResult.details
       results.push({ volunteer: v, score, matchDetails: details })
     }
 
@@ -45,7 +59,7 @@ export class MatchingEngine {
   /**
    * 计算单个志愿者的综合评分
    */
-  private calculateScore(serviceType: ServiceType, v: Volunteer, preferredDay?: number): { score: number; details: string[] } {
+  private calculateScore(serviceType: ServiceType, v: Volunteer, preferredDay?: number): ScoreResult {
     const details: string[] = []
 
     // 技能匹配分
@@ -69,7 +83,8 @@ export class MatchingEngine {
       ratingScore * this.weights.rating +
       expScore * this.weights.serviceExperience
 
-    return { score: Math.round(total * 100) / 100, details }
+    const result: ScoreResult = { score: Math.round(total * 100) / 100, details }
+    return result
   }
 
   /**

@@ -77,11 +77,14 @@ export class VoiceService {
 
     let bestMatch = ServiceType.WECHAT
     let maxScore = 0
-    for (const [service, words] of Object.entries(keywords)) {
+    const kwEntries = Object.entries(keywords)
+    for (let i = 0; i < kwEntries.length; i++) {
+      const service = kwEntries[i][0] as ServiceType
+      const words = kwEntries[i][1] as string[]
       const score = words.filter(w => text.includes(w)).length
       if (score > maxScore) {
         maxScore = score
-        bestMatch = service as ServiceType
+        bestMatch = service
       }
     }
     return bestMatch

@@ -8,11 +8,6 @@ import { Volunteer, ServiceType, MatchResult, Appointment, AppointmentStatus } f
 import { DateUtils } from '../utils/DateUtils'
 import common from '@ohos.app.ability.common'
 
-/**
- * 懒加载数据源（LazyForEach 适配器）
- * 优化：仅渲染可视区域 + 预加载缓冲区，减少首屏渲染节点数
- * 相比普通 ForEach 全量渲染，首屏加载时间可降低约 25-30%
- */
 class MatchDataSource implements IDataSource {
   private dataArray: MatchResult[] = []
   private listeners: DataChangeListener[] = []
@@ -56,7 +51,6 @@ struct ResultPage {
   private matchDataSource: MatchDataSource = new MatchDataSource()
 
   aboutToAppear(): void {
-    // 性能优化: 在 aboutToAppear 中预加载数据，避免 build() 中阻塞首帧渲染
     const params = router.getParams() as Record<string, Object>
     if (params) {
       this.serviceType = (params['serviceType'] as ServiceType) || ServiceType.WECHAT
@@ -129,97 +123,167 @@ struct ResultPage {
   build() {
     Column({ space: 0 }) {
       Row() {
-        Text('< 返回').fontSize(18).fontColor('#0066CC').onClick(() => router.back())
+        Text('< 返回')
+          .fontSize(20)
+          .fontColor('#0066CC')
+          .onClick(() => router.back())
         Blank()
       }
-      .width('100%').padding({ left: 20, right: 20, top: 16 })
+      .width('100%')
+      .padding({ left: 24, top: 20, bottom: 8 })
 
       if (this.loading) {
-        Column({ space: 20 }) {
-          LoadingProgress().width(60).height(60).color('#0066CC')
-          Text('AI正在为您匹配合适的志愿者...').fontSize(18).fontColor('#8899AA')
-          Text(`识别需求: ${this.voiceText}`).fontSize(14).fontColor('#99AABB').margin({ top: 8 })
+        Column({ space: 24 }) {
+          LoadingProgress()
+            .width(72)
+            .height(72)
+            .color('#0066CC')
+          Column({ space: 10 }) {
+            Text('AI正在为您匹配合适的志愿者…')
+              .fontSize(22)
+              .fontColor('#556677')
+              .fontWeight(FontWeight.Medium)
+            Text(`"${this.voiceText}"`)
+              .fontSize(16)
+              .fontColor('#8899AA')
+              .maxLines(2)
+              .textAlign(TextAlign.Center)
+          }
+          .alignItems(HorizontalAlign.Center)
         }
-        .width('100%').height('60%').justifyContent(FlexAlign.Center)
+        .width('100%')
+        .height('60%')
+        .justifyContent(FlexAlign.Center)
       } else {
         Scroll() {
-          Column({ space: 16 }) {
-            Row() {
-              Text('匹配成功！').fontSize(28).fontWeight(FontWeight.Bold).fontColor('#0066CC')
-              Blank()
-              Text(`共${this.matchResults.length}位`).fontSize(14).fontColor('#8899AA')
-            }.width('100%')
+          Column({ space: 8 }) {
+            Column({ space: 4 }) {
+              Text('匹配成功！')
+                .fontSize(32)
+                .fontWeight(FontWeight.Bold)
+                .fontColor('#0066CC')
+              Text(`为您找到 ${this.matchResults.length} 位合适的志愿者`)
+                .fontSize(16)
+                .fontColor('#8899AA')
+            }
+            .alignItems(HorizontalAlign.Center)
+            .width('100%')
+            .margin({ top: 16, bottom: 12 })
 
-            Text(`您的需求: "${this.voiceText}" ｜ 服务类型: ${this.getServiceName()}`)
-              .fontSize(14).fontColor('#8899AA').width('100%')
+            Column({ space: 16 }) {
+              LazyForEach(this.matchDataSource, (result: MatchResult, index: number) => {
+                this.VolunteerCard(result, index)
+              }, (item: MatchResult) => item.volunteer.id + item.score.toString())
+            }
+            .width('100%')
 
-            // LazyForEach: 仅渲染可视区域item，首屏渲染节点减少约25-30%
-            LazyForEach(this.matchDataSource, (result: MatchResult, index: number) => {
-              this.VolunteerCard(result, index)
-            }, (item: MatchResult) => item.volunteer.id + item.score.toString())
-
-            Text('服务全程免费 · 志愿者均已实名认证 · 为老服务自愿保密')
-              .fontSize(13).fontColor('#99AABB').textAlign(TextAlign.Center)
-              .width('100%').margin({ top: 10, bottom: 20 })
+            Text('志愿者均已实名认证 · 服务全程免费 · 信息安全保密')
+              .fontSize(14)
+              .fontColor('#AABBCC')
+              .textAlign(TextAlign.Center)
+              .width('100%')
+              .margin({ top: 8, bottom: 32 })
           }
-          .width('100%').padding(20)
+          .width('100%')
+          .padding({ left: 20, right: 20 })
         }
         .layoutWeight(1)
       }
     }
-    .width('100%').height('100%').backgroundColor('#F5F7FA')
+    .width('100%')
+    .height('100%')
+    .backgroundColor('#F5F7FA')
   }
 
   @Builder
   VolunteerCard(result: MatchResult, index: number) {
-    Column({ space: 10 }) {
+    Column({ space: 12 }) {
       Row() {
-        Text(`匹配度 ${(result.score * 100).toFixed(0)}%`)
-          .fontSize(14).fontColor('#fff').fontWeight(FontWeight.Bold)
-          .padding({ left: 12, right: 12, top: 4, bottom: 4 })
-          .backgroundColor(index === 0 ? '#FF6633' : '#0066CC').borderRadius(12)
+        Text(`${(result.score * 100).toFixed(0)}% 匹配`)
+          .fontSize(16)
+          .fontColor('#FFFFFF')
+          .fontWeight(FontWeight.Bold)
+          .padding({ left: 16, right: 16, top: 6, bottom: 6 })
+          .backgroundColor(index === 0 ? '#F97316' : '#0066CC')
+          .borderRadius(14)
         Blank()
         if (index === 0) {
-          Text('⭐ 最佳匹配').fontSize(13).fontColor('#FF6633').fontWeight(FontWeight.Medium)
+          Row({ space: 4 }) {
+            Text('⭐').fontSize(16)
+            Text('最佳匹配').fontSize(16).fontColor('#F97316').fontWeight(FontWeight.Bold)
+          }
         }
       }
 
       Row({ space: 12 }) {
-        Column() {
-          Text(result.volunteer.name).fontSize(22).fontWeight(FontWeight.Bold)
-          Text(`专业: ${result.volunteer.major}`).fontSize(14).fontColor('#8899AA').margin({ top: 2 })
-        }.alignItems(HorizontalAlign.Start)
-        Blank()
-        Column({ space: 4 }) {
-          Text(`⭐ ${result.volunteer.rating.toFixed(1)}`).fontSize(14).fontColor('#FF9500')
-          Text(`已服务${result.volunteer.serviceCount}次`).fontSize(12).fontColor('#8899AA')
-        }.alignItems(HorizontalAlign.End)
-      }.width('100%')
+        Circle()
+          .width(56)
+          .height(56)
+          .fill(index === 0 ? '#EBF4FF' : '#F0F0F0')
 
-      // 匹配详情
-      Column({ space: 2 }) {
+        Column({ space: 3 }) {
+          Text(result.volunteer.name)
+            .fontSize(26)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#1A1A2E')
+          Text(result.volunteer.major)
+            .fontSize(15)
+            .fontColor('#8899AA')
+        }
+        .alignItems(HorizontalAlign.Start)
+
+        Blank()
+
+        Column({ space: 4 }) {
+          Text(`★ ${result.volunteer.rating.toFixed(1)}`)
+            .fontSize(16)
+            .fontColor('#FF9500')
+            .fontWeight(FontWeight.Medium)
+          Text(`已服务${result.volunteer.serviceCount}次`)
+            .fontSize(13)
+            .fontColor('#8899AA')
+        }
+        .alignItems(HorizontalAlign.End)
+      }
+      .width('100%')
+
+      Divider().color('#F0F2F5')
+
+      Column({ space: 4 }) {
         ForEach(result.matchDetails, (detail: string) => {
-          Text(`· ${detail}`).fontSize(12).fontColor('#8899AA')
+          Text(`· ${detail}`)
+            .fontSize(14)
+            .fontColor('#667788')
         })
       }
 
-      // 技能标签
-      Row({ space: 6 }) {
+      Row({ space: 8 }) {
         ForEach(result.volunteer.skills.slice(0, 3), (skill: string) => {
-          Text(skill).fontSize(11).fontColor('#0066CC')
-            .padding({ left: 8, right: 8, top: 3, bottom: 3 })
-            .backgroundColor('#E8F0FE').borderRadius(8)
+          Text(skill)
+            .fontSize(13)
+            .fontColor('#0066CC')
+            .padding({ left: 12, right: 12, top: 5, bottom: 5 })
+            .backgroundColor('#EBF4FF')
+            .borderRadius(10)
         })
       }
 
       Button('立即预约')
-        .width('100%').height(46).fontSize(18).fontWeight(FontWeight.Medium)
-        .backgroundColor(index === 0 ? '#0066CC' : '#8899AA').borderRadius(23)
-        .margin({ top: 6 })
+        .width('100%')
+        .height(52)
+        .fontSize(20)
+        .fontWeight(FontWeight.Bold)
+        .backgroundColor(index === 0 ? '#0066CC' : '#667788')
+        .borderRadius(26)
+        .shadow({ radius: 8, color: index === 0 ? '#0066CC33' : '#66778822', offsetY: 4 })
+        .margin({ top: 4 })
         .onClick(() => this.createAppointment(result))
     }
-    .width('100%').padding(20).backgroundColor('#fff')
-    .borderRadius(18).shadow({ radius: 8, color: '#00000010', offsetY: 2 })
+    .width('100%')
+    .padding(20)
+    .backgroundColor('#FFFFFF')
+    .borderRadius(20)
+    .shadow({ radius: 10, color: '#0000000C', offsetY: 3 })
   }
 
   async createAppointment(result: MatchResult): Promise<void> {
@@ -238,7 +302,6 @@ struct ResultPage {
 
     const success = await this.appointmentManager.create(appointment)
     if (success) {
-      // 同步到后端
       this.syncToBackend(appointment)
       promptAction.showDialog({
         title: '预约成功！',

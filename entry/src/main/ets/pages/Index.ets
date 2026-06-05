@@ -22,81 +22,107 @@ struct Index {
 
   build() {
     Column({ space: 0 }) {
-      // 顶部问候区
-      Row() {
-        Column({ space: 4 }) {
-          Text(`${this.greeting}，欢迎使用`)
-            .fontSize(16)
-            .fontColor('#8899AA')
+      Column({ space: 4 }) {
+        Text(`${this.greeting}，欢迎使用`)
+          .fontSize(20)
+          .fontColor('#8899AA')
+        Row({ space: 8 }) {
           Text('银龄守望')
-            .fontSize(28)
+            .fontSize(36)
             .fontWeight(FontWeight.Bold)
             .fontColor('#1A1A2E')
-          Text('老年数字生活互助平台')
+        }
+        Text('老年数字生活互助平台')
+          .fontSize(16)
+          .fontColor('#8899AA')
+          .margin({ top: 2 })
+      }
+      .alignItems(HorizontalAlign.Center)
+      .width('100%')
+      .padding({ left: 24, right: 24, top: 48, bottom: 32 })
+      .backgroundColor('#FFFFFF')
+      .borderRadius({ bottomLeft: 32, bottomRight: 32 })
+      .shadow({ radius: 16, color: '#0000000A', offsetY: 4 })
+
+      Column({ space: 8 }) {
+        Text('需要什么帮助？')
+          .fontSize(26)
+          .fontWeight(FontWeight.Bold)
+          .fontColor('#1A1A2E')
+        Text('点击下方卡片，语音说出您的需求')
+          .fontSize(16)
+          .fontColor('#99AABB')
+      }
+      .alignItems(HorizontalAlign.Center)
+      .width('100%')
+      .padding({ left: 24, right: 24, top: 28, bottom: 16 })
+
+      Grid() {
+        GridItem() {
+          this.ServiceCard('微信使用', '#07C160', '💬', ServiceType.WECHAT,
+            '聊天 · 朋友圈 · 视频通话')
+        }
+        GridItem() {
+          this.ServiceCard('医院挂号', '#2563EB', '🏥', ServiceType.MEDICAL_BOOKING,
+            '预约挂号 · 问诊导航')
+        }
+        GridItem() {
+          this.ServiceCard('医保社保', '#F97316', '📋', ServiceType.HEALTH_INSURANCE,
+            '医保查询 · 社保办理')
+        }
+        GridItem() {
+          this.ServiceCard('打车导航', '#7C3AED', '🚗', ServiceType.TRANSPORT,
+            '叫车出行 · 路线导航')
+        }
+      }
+      .columnsTemplate('1fr 1fr')
+      .columnsGap(16)
+      .rowsGap(16)
+      .padding({ left: 20, right: 20, top: 8, bottom: 8 })
+      .width('100%')
+      .layoutWeight(1)
+
+      Column({ space: 10 }) {
+        Row({ space: 6 }) {
+          Text('🔒').fontSize(16)
+          Text('志愿者实名认证 · 服务全程免费 · 隐私严格保密')
             .fontSize(14)
             .fontColor('#8899AA')
         }
-        .alignItems(HorizontalAlign.Start)
-        Blank()
-        Image($r('app.media.startIcon'))
-          .width(64)
-          .height(64)
-          .borderRadius(32)
+        Text(`更新时间: ${this.currentTime}`)
+          .fontSize(13)
+          .fontColor('#AABBCC')
       }
-      .width('100%')
-      .padding({ left: 24, right: 24, top: 20, bottom: 12 })
-
-      Divider().color('#E8ECF0').margin({ left: 24, right: 24 })
-
-      Row() {
-        Text('需要什么帮助？')
-          .fontSize(20).fontWeight(FontWeight.Medium).fontColor('#333')
-        Blank()
-        Text('点击卡片语音录入')
-          .fontSize(13).fontColor('#99AABB')
-      }
-      .width('100%')
-      .padding({ left: 24, right: 24, top: 20, bottom: 12 })
-
-      // 四大服务卡片（2x2 网格）
-      Grid() {
-        GridItem() { this.ServiceCard('微信使用', '#07C160', '📱', ServiceType.WECHAT) }
-        GridItem() { this.ServiceCard('医院挂号', '#0066CC', '🏥', ServiceType.MEDICAL_BOOKING) }
-        GridItem() { this.ServiceCard('医保社保', '#FF6633', '📋', ServiceType.HEALTH_INSURANCE) }
-        GridItem() { this.ServiceCard('打车导航', '#9933FF', '🚗', ServiceType.TRANSPORT) }
-      }
-      .columnsTemplate('1fr 1fr')
-      .columnsGap(16).rowsGap(16)
-      .padding({ left: 20, right: 20, top: 8, bottom: 8 })
-      .width('100%')
-
-      Column({ space: 12 }) {
-        Row({ space: 8 }) {
-          Text('🔒').fontSize(14)
-          Text('服务全程免费 · 志愿者实名认证 · 隐私严格保密').fontSize(12).fontColor('#8899AA')
-        }
-        Row({ space: 8 }) {
-          Text('⏰').fontSize(14)
-          Text(`更新于 ${this.currentTime}`).fontSize(12).fontColor('#8899AA')
-        }
-      }
-      .margin({ top: 16, bottom: 30 })
+      .margin({ top: 8, bottom: 32 })
     }
-    .width('100%').height('100%')
+    .width('100%')
+    .height('100%')
     .backgroundColor('#F5F7FA')
   }
 
   @Builder
-  ServiceCard(name: string, color: ResourceColor, icon: string, type: ServiceType) {
-    Column({ space: 10 }) {
-      Text(icon).fontSize(36)
-      Text(name).fontSize(20).fontWeight(FontWeight.Medium).fontColor('#fff')
-      Text('点击语音说出需求').fontSize(12).fontColor('rgba(255,255,255,0.8)')
+  ServiceCard(name: string, color: ResourceColor, icon: string, type: ServiceType, desc: string) {
+    Column({ space: 12 }) {
+      Text(icon)
+        .fontSize(48)
+      Column({ space: 6 }) {
+        Text(name)
+          .fontSize(24)
+          .fontWeight(FontWeight.Bold)
+          .fontColor('#FFFFFF')
+        Text(desc)
+          .fontSize(13)
+          .fontColor('rgba(255,255,255,0.85)')
+          .textAlign(TextAlign.Center)
+          .maxLines(1)
+      }
     }
-    .width('100%').height(150)
-    .backgroundColor(color).borderRadius(20)
+    .width('100%')
+    .height(180)
+    .backgroundColor(color)
+    .borderRadius(24)
     .justifyContent(FlexAlign.Center)
-    .shadow({ radius: 12, color: color, offsetY: 4 })
+    .shadow({ radius: 16, color: color, offsetY: 6 })
     .onClick(() => {
       router.pushUrl({ url: 'pages/VoicePage', params: { serviceType: type } })
     })

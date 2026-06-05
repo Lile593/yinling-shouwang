@@ -10,7 +10,7 @@ import { ServiceType } from '../models/ServiceModels'
 struct VoicePage {
   @State time: number = 5
   @State isRecording: boolean = false
-  @State tip: string = '点击按钮，开始说出您的需求'
+  @State tip: string = '请点击下方按钮，说出您的需求'
   @State recognizedText: string = ''
   @State serviceType: ServiceType = ServiceType.WECHAT
   private countTimer: number | null = null
@@ -20,7 +20,7 @@ struct VoicePage {
     const params = router.getParams() as Record<string, Object>
     if (params && params['serviceType']) {
       this.serviceType = params['serviceType'] as ServiceType
-      this.tip = `请说出与"${this.getServiceName()}"相关的需求`
+      this.tip = `请说出与「${this.getServiceName()}」相关的需求`
     }
   }
 
@@ -33,57 +33,117 @@ struct VoicePage {
   }
 
   build() {
-    Column({ space: 20 }) {
+    Column({ space: 0 }) {
       Row() {
-        Text('< 返回').fontSize(18).fontColor('#0066CC').onClick(() => router.back())
+        Text('< 返回')
+          .fontSize(20)
+          .fontColor('#0066CC')
+          .onClick(() => router.back())
       }
-      .width('100%').padding({ left: 20, top: 16 })
+      .width('100%')
+      .padding({ left: 24, top: 20, bottom: 12 })
 
       Column({ space: 8 }) {
-        Text('语音录入需求').fontSize(30).fontWeight(FontWeight.Bold)
-        Text(`当前服务: ${this.getServiceName()}`).fontSize(16).fontColor('#8899AA')
+        Text('语音录入需求')
+          .fontSize(36)
+          .fontWeight(FontWeight.Bold)
+          .fontColor('#1A1A2E')
+        Row({ space: 6 }) {
+          Text('当前服务:')
+            .fontSize(18)
+            .fontColor('#8899AA')
+          Text(this.getServiceName())
+            .fontSize(18)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#0066CC')
+            .padding({ left: 10, right: 10, top: 4, bottom: 4 })
+            .backgroundColor('#EBF4FF')
+            .borderRadius(8)
+        }
       }
-      .margin({ top: 20 })
+      .alignItems(HorizontalAlign.Center)
+      .width('100%')
+      .margin({ top: 8 })
 
-      Text(this.tip).fontSize(20).fontColor('#555').textAlign(TextAlign.Center).width('80%').margin({ top: 20 })
+      Row() {
+        Text(this.tip)
+          .fontSize(20)
+          .fontColor('#555555')
+          .textAlign(TextAlign.Center)
+      }
+      .width('80%')
+      .margin({ top: 32, bottom: 8 })
+      .justifyContent(FlexAlign.Center)
 
       if (this.recognizedText) {
-        Column() {
-          Text('识别结果:').fontSize(14).fontColor('#888')
-          Text(this.recognizedText).fontSize(18).fontColor('#333').fontWeight(FontWeight.Medium).margin({ top: 4 })
+        Column({ space: 6 }) {
+          Text('✓ 识别结果')
+            .fontSize(15)
+            .fontColor('#0066CC')
+            .fontWeight(FontWeight.Medium)
+          Text(this.recognizedText)
+            .fontSize(22)
+            .fontColor('#1A1A2E')
+            .fontWeight(FontWeight.Medium)
+            .textAlign(TextAlign.Center)
+            .maxLines(3)
         }
-        .padding(16).backgroundColor('#F0F4FF').borderRadius(12).width('85%')
+        .width('88%')
+        .padding(20)
+        .backgroundColor('#EBF4FF')
+        .borderRadius(16)
+        .margin({ top: 12 })
       }
 
-      // 录音按钮
+      Blank()
+
       Stack({ alignContent: Alignment.Center }) {
         Circle()
-          .width(160).height(160)
+          .width(180)
+          .height(180)
           .fill(this.isRecording ? '#FF4444' : '#0066CC')
-          .shadow({ radius: this.isRecording ? 24 : 12, color: this.isRecording ? '#FF444488' : '#0066CC88' })
+          .shadow({
+            radius: this.isRecording ? 32 : 16,
+            color: this.isRecording ? '#FF444466' : '#0066CC66'
+          })
 
         if (this.isRecording) {
-          Column({ space: 4 }) {
-            Text(this.time.toString()).fontSize(56).fontColor('#fff').fontWeight(FontWeight.Bold)
-            Text('秒').fontSize(16).fontColor('rgba(255,255,255,0.8)')
+          Column({ space: 2 }) {
+            Text(this.time.toString())
+              .fontSize(64)
+              .fontColor('#FFFFFF')
+              .fontWeight(FontWeight.Bold)
+            Text('秒')
+              .fontSize(18)
+              .fontColor('rgba(255,255,255,0.85)')
           }
         } else {
-          Column({ space: 4 }) {
-            Text('🎤').fontSize(36)
-            Text(this.recognizedText ? '重新录入' : '开始录入').fontSize(16).fontColor('#fff')
+          Column({ space: 6 }) {
+            Text('🎤')
+              .fontSize(42)
+            Text(this.recognizedText ? '重新录入' : '开始录入')
+              .fontSize(20)
+              .fontColor('#FFFFFF')
+              .fontWeight(FontWeight.Medium)
           }
         }
       }
-      .margin({ top: 30 })
       .onClick(() => this.startRecording())
 
-      Text(this.recognizedText ? '点击可重新录入，或' : '5秒自动识别您的语音需求')
-        .fontSize(14).fontColor('#99AABB').margin({ top: 16 })
+      Text(this.recognizedText ? '点击圆圈可重新录入' : '点击后连续录入5秒，AI自动识别')
+        .fontSize(16)
+        .fontColor('#AABBCC')
+        .margin({ top: 28 })
 
       if (this.recognizedText) {
         Button('确认，开始匹配志愿者')
-          .width('80%').height(52).fontSize(20).fontWeight(FontWeight.Medium)
-          .backgroundColor('#0066CC').borderRadius(26).margin({ top: 20 })
+          .width('84%')
+          .height(56)
+          .fontSize(22)
+          .fontWeight(FontWeight.Bold)
+          .backgroundColor('#0066CC')
+          .borderRadius(28)
+          .shadow({ radius: 12, color: '#0066CC44', offsetY: 4 })
           .onClick(() => {
             router.pushUrl({
               url: 'pages/ResultPage',
@@ -91,8 +151,12 @@ struct VoicePage {
             })
           })
       }
+
+      Blank()
     }
-    .width('100%').height('100%').backgroundColor('#FFFFFF')
+    .width('100%')
+    .height('100%')
+    .backgroundColor('#FFFFFF')
   }
 
   startRecording(): void {
@@ -100,7 +164,6 @@ struct VoicePage {
     this.time = 5
     this.isRecording = true
     this.recognizedText = ''
-    this.tip = '正在聆听您的需求...'
 
     this.countTimer = setInterval(() => {
       this.time--
@@ -114,22 +177,19 @@ struct VoicePage {
   }
 
   async processVoice(): Promise<void> {
-    // 先尝试本地语音识别
     try {
       const result = await this.voiceService.startRecognition()
       this.recognizedText = result.text
       this.serviceType = result.intent
-      this.tip = `识别成功！置信度: ${(result.confidence * 100).toFixed(0)}%`
+      this.tip = `识别成功，置信度 ${(result.confidence * 100).toFixed(0)}%`
 
-      // 同时上传到AI边缘计算节点
       this.uploadToAIEdge(result.text)
     } catch (e) {
-      this.tip = '识别失败，请重新录入'
+      this.tip = '识别失败，请点击按钮重新录入'
       promptAction.showToast({ message: '语音识别失败，请重试', duration: 2000 })
     }
   }
 
-  // 对接AI边缘计算后端
   uploadToAIEdge(text: string): void {
     let httpRequest = http.createHttp()
     httpRequest.request('http://192.168.10.1:8000/ai-service', {
