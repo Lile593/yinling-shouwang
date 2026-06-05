@@ -1,10 +1,11 @@
-import { Volunteer, ServiceType, MatchResult, TimeSlot } from '../models/ServiceModels'
+import { Volunteer, ServiceType, MatchResult } from '../models/ServiceModels'
 
 interface MatchWeights {
   skillMatch: number
   availability: number
   rating: number
-  serviceExperience: number
+  experience: number
+  certification: number
 }
 
 interface ScoreResult {
@@ -12,18 +13,15 @@ interface ScoreResult {
   details: string[]
 }
 
-/**
- * 智能匹配引擎
- * 基于加权多维度评分算法，为老年人匹配最合适的志愿者
- */
 export class MatchingEngine {
   private static instance: MatchingEngine
-  // 评分权重配置
+
   private readonly weights: MatchWeights = {
-    skillMatch: 0.40,       // 技能匹配度
-    availability: 0.25,     // 时间可用性
-    rating: 0.20,           // 志愿者评分
-    serviceExperience: 0.15 // 服务经验
+    skillMatch: 0.30,
+    availability: 0.25,
+    rating: 0.20,
+    experience: 0.15,
+    certification: 0.10
   }
 
   static getInstance(): MatchingEngine {
@@ -33,94 +31,111 @@ export class MatchingEngine {
     return MatchingEngine.instance
   }
 
-  /**
-   * 核心匹配算法
-   * @param serviceType 需求服务类型
-   * @param volunteers  候选志愿者池
-   * @param preferredDay 偏好的服务日（可选，0=周日...6=周六）
-   * @returns 按评分降序排列的匹配结果
-   */
   match(serviceType: ServiceType, volunteers: Volunteer[], preferredDay?: number): MatchResult[] {
     const results: MatchResult[] = []
 
-    for (const v of volunteers) {
+    for (let i = 0; i < volunteers.length; i++) {
+      const v = volunteers[i]
       const calcResult = this.calculateScore(serviceType, v, preferredDay)
       const score = calcResult.score
       const details = calcResult.details
       results.push({ volunteer: v, score, matchDetails: details })
     }
 
-    // 按评分降序排列，过滤零分结果
     return results
-      .filter(r => r.score > 0)
+      .filter(r => r.score > 0.15)
       .sort((a, b) => b.score - a.score)
   }
 
-  /**
-   * 计算单个志愿者的综合评分
-   */
   private calculateScore(serviceType: ServiceType, v: Volunteer, preferredDay?: number): ScoreResult {
     const details: string[] = []
 
-    // 技能匹配分
     const skillScore = this.calcSkillMatch(serviceType, v)
-    details.push(`技能匹配: ${(skillScore * 100).toFixed(0)}%`)
+    details.push(`技能匹配度: ${(skillScore * 100).toFixed(0)}%`)
 
-    // 时间可用性分
     const availScore = this.calcAvailability(v, preferredDay)
-    details.push(`时间可用: ${(availScore * 100).toFixed(0)}%`)
+    details.push(`空闲时间匹配: ${(availScore * 100).toFixed(0)}%`)
 
-    // 评分归一化（假设满分5.0）
     const ratingScore = Math.min(v.rating / 5.0, 1.0)
     details.push(`用户评分: ${v.rating.toFixed(1)}/5.0`)
 
-    // 服务经验分（10次以上满分）
-    const expScore = Math.min(v.serviceCount / 10, 1.0)
-    details.push(`服务次数: ${v.serviceCount}次`)
+    const expScore = Math.min(v.serviceCount / 20, 1.0)
+    details.push(`服务经验: ${v.serviceCount}次`)
+
+    const certScore = Math.min(v.certifications.length / 3, 1.0)
+    if (v.certifications.length > 0) {
+      details.push(`持有${v.certifications.length}项相关资质`)
+    }
 
     const total = skillScore * this.weights.skillMatch +
       availScore * this.weights.availability +
       ratingScore * this.weights.rating +
-      expScore * this.weights.serviceExperience
+      expScore * this.weights.experience +
+      certScore * this.weights.certification
 
-    const result: ScoreResult = { score: Math.round(total * 100) / 100, details }
+    const result: ScoreResult = { score: Math.round(total * 10000) / 10000, details }
     return result
   }
 
-  /**
-   * 技能匹配度计算
-   */
   private calcSkillMatch(serviceType: ServiceType, v: Volunteer): number {
     const skillMap: Record<ServiceType, string[]> = {
-      [ServiceType.WECHAT]: ['社交软件', '智能手机', '视频通话'],
-      [ServiceType.MEDICAL_BOOKING]: ['医疗系统', '挂号流程', '医院导航'],
-      [ServiceType.HEALTH_INSURANCE]: ['社保知识', '医保政策', '政务APP'],
-      [ServiceType.TRANSPORT]: ['打车软件', '地图导航', '公交查询']
+      [ServiceType.WECHAT]: ['微信', '聊天', '视频通话', '朋友圈', '社交', '手机', '拍照', '相册'],
+      [ServiceType.MEDICAL_BOOKING]: ['挂号', '医院', '就诊', '科室', '检查', '预约', '门诊', '看病'],
+      [ServiceType.HEALTH_INSURANCE]: ['医保', '社保', '报销', '养老', '退休', '政策', '保险', '备案'],
+      [ServiceType.TRANSPORT]: ['打车', '导航', '公交', '地铁', '出行', '地图', '交通', '路线']
     }
 
     const required = skillMap[serviceType] || []
-    if (required.length === 0) return 0.5
+    if (required.length === 0) return 0.3
 
-    const matched = required.filter(s => v.skills.some(vs => vs.includes(s) || s.includes(vs)))
-    return matched.length / required.length
-  }
-
-  /**
-   * 时间可用性计算
-   */
-  private calcAvailability(v: Volunteer, preferredDay?: number): number {
-    if (!v.availableTimes || v.availableTimes.length === 0) return 0.3
-
-    if (preferredDay !== undefined) {
-      const todayMatch = v.availableTimes.filter(t => t.dayOfWeek === preferredDay)
-      if (todayMatch.length > 0) return 1.0
-      // 相邻天也算部分可用
-      const adjacentMatch = v.availableTimes.filter(t =>
-        Math.abs(t.dayOfWeek - preferredDay) <= 1
-      )
-      return adjacentMatch.length > 0 ? 0.6 : 0.2
+    let matchCount = 0
+    for (let i = 0; i < required.length; i++) {
+      const keyword = required[i]
+      for (let j = 0; j < v.skills.length; j++) {
+        if (v.skills[j].includes(keyword) || keyword.includes(v.skills[j])) {
+          matchCount++
+          break
+        }
+      }
     }
 
-    return Math.min(v.availableTimes.length / 5, 1.0)
+    let score = matchCount / required.length
+
+    const bonusThreshold = required.length * 0.6
+    if (matchCount >= bonusThreshold) {
+      score = score * 1.15
+    }
+
+    return Math.min(score, 1.0)
+  }
+
+  private calcAvailability(v: Volunteer, preferredDay?: number): number {
+    if (!v.availableTimes || v.availableTimes.length === 0) return 0.1
+
+    if (preferredDay !== undefined) {
+      let todayMatches = 0
+      let adjacentMatches = 0
+
+      for (let i = 0; i < v.availableTimes.length; i++) {
+        const t = v.availableTimes[i]
+        const diff = Math.abs(t.dayOfWeek - preferredDay)
+        if (diff === 0) {
+          todayMatches++
+        } else if (diff <= 1) {
+          adjacentMatches++
+        }
+      }
+
+      if (todayMatches > 0) {
+        let score = 1.0
+        if (todayMatches >= 2) score = 1.0
+        return score
+      }
+
+      if (adjacentMatches > 0) return 0.55
+      return 0.15
+    }
+
+    return Math.min(v.availableTimes.length / 6, 1.0)
   }
 }

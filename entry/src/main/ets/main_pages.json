@@ -2,6 +2,8 @@
   "src": [
   "pages/Index",
   "pages/VoicePage",
-  "pages/ResultPage"
+  "pages/ResultPage",
+  "pages/AppointmentsPage",
+  "pages/EvaluationPage"
   ]
 }

@@ -1,14 +1,16 @@
 import router from '@ohos.router'
-import { ServiceType, ServiceTypeLabel } from '../models/ServiceModels'
+import { ServiceType, ServiceTypeLabel, ServiceIcons } from '../models/ServiceModels'
 import { DateUtils } from '../utils/DateUtils'
+import { Colors, Sizes } from '../common/DesignTokens'
 
 @Entry
 @Component
 struct Index {
   @State currentTime: string = ''
   @State greeting: string = ''
+  @State unreadCount: number = 0
 
-  aboutToAppear(): void {
+  async aboutToAppear(): Promise<void> {
     const now = new Date()
     const hour = now.getHours()
     if (hour < 6) this.greeting = '夜深了'
@@ -22,96 +24,110 @@ struct Index {
 
   build() {
     Column({ space: 0 }) {
-      Column({ space: 4 }) {
+      Column({ space: Sizes.SPACING_XS }) {
         Text(`${this.greeting}，欢迎使用`)
-          .fontSize(20)
-          .fontColor('#8899AA')
-        Row({ space: 8 }) {
-          Text('银龄守望')
-            .fontSize(36)
-            .fontWeight(FontWeight.Bold)
-            .fontColor('#1A1A2E')
-        }
+          .fontSize(Sizes.BODY_L)
+          .fontColor(Colors.TEXT_HINT)
+        Text('银龄守望')
+          .fontSize(36)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(Colors.TEXT_PRIMARY)
         Text('老年数字生活互助平台')
-          .fontSize(16)
-          .fontColor('#8899AA')
+          .fontSize(Sizes.BODY_M)
+          .fontColor(Colors.TEXT_HINT)
           .margin({ top: 2 })
       }
       .alignItems(HorizontalAlign.Center)
       .width('100%')
-      .padding({ left: 24, right: 24, top: 48, bottom: 32 })
-      .backgroundColor('#FFFFFF')
+      .padding({ left: Sizes.SPACING_L, right: Sizes.SPACING_L, top: 52, bottom: 36 })
+      .backgroundColor(Colors.BG_PRIMARY)
       .borderRadius({ bottomLeft: 32, bottomRight: 32 })
       .shadow({ radius: 16, color: '#0000000A', offsetY: 4 })
 
-      Column({ space: 8 }) {
+      Column({ space: Sizes.SPACING_S }) {
         Text('需要什么帮助？')
           .fontSize(26)
           .fontWeight(FontWeight.Bold)
-          .fontColor('#1A1A2E')
+          .fontColor(Colors.TEXT_PRIMARY)
         Text('点击下方卡片，语音说出您的需求')
-          .fontSize(16)
-          .fontColor('#99AABB')
+          .fontSize(Sizes.BODY_M)
+          .fontColor(Colors.TEXT_HINT)
       }
       .alignItems(HorizontalAlign.Center)
       .width('100%')
-      .padding({ left: 24, right: 24, top: 28, bottom: 16 })
+      .padding({ left: Sizes.SPACING_L, right: Sizes.SPACING_L, top: 28, bottom: 20 })
 
       Grid() {
         GridItem() {
-          this.ServiceCard('微信使用', '#07C160', '💬', ServiceType.WECHAT,
+          this.ServiceCard('微信使用', Colors.SUCCESS, ServiceIcons['wechat'], ServiceType.WECHAT,
             '聊天 · 朋友圈 · 视频通话')
         }
         GridItem() {
-          this.ServiceCard('医院挂号', '#2563EB', '🏥', ServiceType.MEDICAL_BOOKING,
+          this.ServiceCard('医院挂号', Colors.PRIMARY, ServiceIcons['medical_booking'], ServiceType.MEDICAL_BOOKING,
             '预约挂号 · 问诊导航')
         }
         GridItem() {
-          this.ServiceCard('医保社保', '#F97316', '📋', ServiceType.HEALTH_INSURANCE,
+          this.ServiceCard('医保社保', Colors.WARNING, ServiceIcons['health_insurance'], ServiceType.HEALTH_INSURANCE,
             '医保查询 · 社保办理')
         }
         GridItem() {
-          this.ServiceCard('打车导航', '#7C3AED', '🚗', ServiceType.TRANSPORT,
+          this.ServiceCard('打车导航', Colors.PURPLE, ServiceIcons['transport'], ServiceType.TRANSPORT,
             '叫车出行 · 路线导航')
         }
       }
       .columnsTemplate('1fr 1fr')
-      .columnsGap(16)
-      .rowsGap(16)
+      .columnsGap(Sizes.SPACING_M)
+      .rowsGap(Sizes.SPACING_M)
       .padding({ left: 20, right: 20, top: 8, bottom: 8 })
       .width('100%')
       .layoutWeight(1)
 
-      Column({ space: 10 }) {
+      Button() {
+        Row({ space: Sizes.SPACING_S }) {
+          Text('📋').fontSize(20)
+          Text('查看我的预约').fontSize(Sizes.BODY_L).fontWeight(FontWeight.Medium)
+        }
+      }
+      .width('88%')
+      .height(52)
+      .fontColor(Colors.PRIMARY)
+      .backgroundColor(Colors.PRIMARY_LIGHT)
+      .borderRadius(Sizes.RADIUS_BTN)
+      .margin({ bottom: Sizes.SPACING_S })
+      .onClick(() => {
+        router.pushUrl({ url: 'pages/AppointmentsPage' })
+      })
+
+      Column({ space: Sizes.SPACING_S }) {
         Row({ space: 6 }) {
-          Text('🔒').fontSize(16)
+          Text('🔒').fontSize(Sizes.BODY_M)
           Text('志愿者实名认证 · 服务全程免费 · 隐私严格保密')
-            .fontSize(14)
-            .fontColor('#8899AA')
+            .fontSize(Sizes.BODY_S)
+            .fontColor(Colors.TEXT_HINT)
         }
         Text(`更新时间: ${this.currentTime}`)
-          .fontSize(13)
-          .fontColor('#AABBCC')
+          .fontSize(Sizes.CAPTION)
+          .fontColor(Colors.TEXT_DISABLED)
       }
-      .margin({ top: 8, bottom: 32 })
+      .margin({ top: 4, bottom: 32 })
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F5F7FA')
+    .backgroundColor(Colors.BG_SECONDARY)
   }
 
   @Builder
   ServiceCard(name: string, color: ResourceColor, icon: string, type: ServiceType, desc: string) {
     Column({ space: 12 }) {
       Text(icon)
-        .fontSize(48)
+        .fontSize(44)
       Column({ space: 6 }) {
         Text(name)
-          .fontSize(24)
+          .fontSize(Sizes.TITLE_M)
           .fontWeight(FontWeight.Bold)
-          .fontColor('#FFFFFF')
+          .fontColor(Colors.TEXT_WHITE)
         Text(desc)
-          .fontSize(13)
+          .fontSize(Sizes.BODY_S)
           .fontColor('rgba(255,255,255,0.85)')
           .textAlign(TextAlign.Center)
           .maxLines(1)
@@ -120,7 +136,7 @@ struct Index {
     .width('100%')
     .height(180)
     .backgroundColor(color)
-    .borderRadius(24)
+    .borderRadius(Sizes.RADIUS_CARD + 4)
     .justifyContent(FlexAlign.Center)
     .shadow({ radius: 16, color: color, offsetY: 6 })
     .onClick(() => {

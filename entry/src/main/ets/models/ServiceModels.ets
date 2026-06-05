@@ -1,6 +1,3 @@
-/**
- * 服务类型枚举
- */
 export enum ServiceType {
   WECHAT = 'wechat',
   MEDICAL_BOOKING = 'medical_booking',
@@ -8,9 +5,6 @@ export enum ServiceType {
   TRANSPORT = 'transport'
 }
 
-/**
- * 服务类型中文映射
- */
 export const ServiceTypeLabel: Record<string, string> = {
   'wechat': '微信使用',
   'medical_booking': '医院挂号',
@@ -18,32 +12,36 @@ export const ServiceTypeLabel: Record<string, string> = {
   'transport': '打车导航'
 }
 
-/**
- * 志愿者信息模型
- */
+export const ServiceIcons: Record<string, string> = {
+  'wechat': '💬',
+  'medical_booking': '🏥',
+  'health_insurance': '📋',
+  'transport': '🚗'
+}
+
 export interface Volunteer {
   id: string
   name: string
+  age: number
+  gender: string
+  university: string
   major: string
+  grade: string
+  description: string
   skills: string[]
   availableTimes: TimeSlot[]
   rating: number
   serviceCount: number
+  certifications: string[]
   avatar: string
 }
 
-/**
- * 时间段模型
- */
 export interface TimeSlot {
-  dayOfWeek: number  // 0=周日, 1=周一...
+  dayOfWeek: number
   startHour: number
   endHour: number
 }
 
-/**
- * 预约单模型
- */
 export interface Appointment {
   id: string
   serviceType: ServiceType
@@ -59,9 +57,6 @@ export interface Appointment {
   createTime: number
 }
 
-/**
- * 预约状态枚举
- */
 export enum AppointmentStatus {
   PENDING = 'pending',
   CONFIRMED = 'confirmed',
@@ -69,20 +64,45 @@ export enum AppointmentStatus {
   CANCELLED = 'cancelled'
 }
 
-/**
- * 匹配结果模型
- */
+export const AppointmentStatusLabel: Record<string, string> = {
+  'pending': '待确认',
+  'confirmed': '已确认',
+  'completed': '已完成',
+  'cancelled': '已取消'
+}
+
+export const AppointmentStatusColor: Record<string, string> = {
+  'pending': '#F97316',
+  'confirmed': '#2563EB',
+  'completed': '#07C160',
+  'cancelled': '#8899AA'
+}
+
 export interface MatchResult {
   volunteer: Volunteer
   score: number
   matchDetails: string[]
 }
 
-/**
- * 语音识别结果模型
- */
 export interface VoiceRecognitionResult {
   text: string
   confidence: number
   intent: ServiceType
+}
+
+export interface Evaluation {
+  id: string
+  appointmentId: string
+  volunteerId: string
+  volunteerName: string
+  serviceType: ServiceType
+  rating: number
+  comment: string
+  createTime: number
+}
+
+export interface ApiResponse {
+  code: number
+  message: string
+  data: Object | null
 }
